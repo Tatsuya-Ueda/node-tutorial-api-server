@@ -6,15 +6,22 @@ const app = express();
 const redis = new Redis({
   port: 6379,
   host: "localhost",
-  //   password: process.env.REDIS_PASSWORD,
+  password: process.env.REDIS_PASSWORD,
   enableOfflineQueue: false,
 });
 
+// const init = async () => {
+//   await Promise.all([
+//     redis.set("users:1", JSON.stringify({ id: 1, name: "alpha" })),
+//     redis.set("users:2", JSON.stringify({ id: 2, name: "beta" })),
+//   ]);
+// };
+
 const init = async () => {
-  await Promise.all([
-    redis.set("users:1", JSON.stringify({ id: 1, name: "alpha" })),
-    redis.set("users:2", JSON.stringify({ id: 2, name: "beta" })),
-  ]);
+  await redis.rpush("users:list", JSON.stringify({ id: 1, name: "alpha" }));
+  await redis.rpush("users:list", JSON.stringify({ id: 2, name: "beta" }));
+  await redis.rpush("users:list", JSON.stringify({ id: 3, name: "chi" }));
+  await redis.rpush("users:list", JSON.stringify({ id: 4, name: "delta" }));
 };
 
 app.get("/", (req, res) => {
@@ -35,18 +42,13 @@ app.get("/user/:id", async (req, res) => {
 
 app.get("/users", async (req, res) => {
   try {
-    const stream = redis.scanStream({
-      match: "users:*",
-      count: 1,
+    const offset = req.query.offset ? Number(req.query.offset) : 0;
+    const usersList = await redis.lrange("users:list", offset, offset + 2);
+
+    const users = usersList.map((user) => {
+      return JSON.parse(user);
     });
-    const users = [];
-    for await (const resultKeys of stream) {
-      for (const key of resultKeys) {
-        const value = await redis.get(key);
-        const user = JSON.parse(value);
-        users.push(user);
-      }
-    }
+
     res.status(200).json(users);
   } catch (err) {
     console.error(err);
