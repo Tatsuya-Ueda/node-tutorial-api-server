@@ -24,20 +24,8 @@ const init = async () => {
   await redis.rpush("users:list", JSON.stringify({ id: 4, name: "delta" }));
 };
 
-app.get("/", (req, res) => {
-  res.status(200).send("hello\n");
-});
-
-app.get("/user/:id", async (req, res) => {
-  try {
-    const key = `users:${req.params.id}`;
-    const val = await redis.get(key);
-    const user = JSON.parse(val);
-    res.status(200).json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("internal error");
-  }
+app.get("/", (req, res, next) => {
+  res.status(200).send("hello!\n");
 });
 
 app.get("/users", async (req, res) => {
