@@ -10,9 +10,11 @@ const logMiddleWare = (req, res, next) => {
   next();
 };
 
-app.use(logMiddleWare);
+app.use((err, req, res, next) => {
+  res.status(500).send("Internal Server Error");
+});
 
-app.get("/", (req, res, next) => {
+app.get("/", logMiddleWare, (req, res, next) => {
   res.status(200).send("hello!\n");
 });
 
