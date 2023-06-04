@@ -1,7 +1,9 @@
+const path = require("path");
 const Redis = require("ioredis");
 const express = require("express");
 
 const app = express();
+app.set("view engine", "ejs");
 
 const redis = new Redis({
   port: 6379,
@@ -25,7 +27,8 @@ const init = async () => {
 };
 
 app.get("/", (req, res, next) => {
-  res.status(200).send("hello!\n");
+  // res.status(200).send("hello!\n");
+  res.render(path.join(__dirname, "views", "index.ejs"));
 });
 
 app.get("/users", async (req, res) => {
@@ -37,7 +40,8 @@ app.get("/users", async (req, res) => {
       return JSON.parse(user);
     });
 
-    res.status(200).json(users);
+    // res.status(200).json(users);
+    res.render(path.join(__dirname, "views", "users.ejs"), { users: users });
   } catch (err) {
     console.error(err);
     res.status(500).send("internal error");
